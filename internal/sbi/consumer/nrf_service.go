@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -195,6 +196,11 @@ func (s *nnrfService) buildNfProfile(ausfContext *ausf_context.AUSFContext) (
 	profile.Ipv4Addresses = append(profile.Ipv4Addresses, ausfContext.RegisterIPv4)
 	services := []models.Nrf_NFMgmt_NFService{}
 	for _, nfService := range ausfContext.NfService {
+		allowed, known := ausf_context.AllowedNfTypesForService(nfService.ServiceName)
+		if !known {
+			return profile, fmt.Errorf("no AllowedNfTypes policy for service %q", nfService.ServiceName)
+		}
+		nfService.AllowedNfTypes = allowed
 		services = append(services, nfService)
 	}
 	if len(services) > 0 {
